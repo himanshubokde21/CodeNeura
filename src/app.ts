@@ -1,4 +1,4 @@
-// ai-code-visualizer/backend/src/app.ts
+
 import dotenv from 'dotenv';
 dotenv.config();
 import express from 'express';
