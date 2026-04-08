@@ -15,12 +15,16 @@ app.use(express.json());
 // --- API routes will remain at /api ---
 app.use('/api', apiRoutes);
 
-// --- Serve your static UI from the 'public' folder ---
-// This is the new block that serves your preferred UI
+// --- Serve static files from the 'public' folder ---
 const publicPath = path.join(__dirname, '..', 'public');
 app.use(express.static(publicPath));
 
-// For any other GET request, serve the index.html file
+// --- Page routes ---
+app.get('/app', (req, res) => {
+  res.sendFile(path.join(publicPath, 'app.html'));
+});
+
+// Landing page for everything else
 app.get('*', (req, res) => {
   res.sendFile(path.join(publicPath, 'index.html'));
 });

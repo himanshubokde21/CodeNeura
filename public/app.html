@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeNeura — App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ============================================================
+         HEADER
+    ============================================================ -->
+    <header>
+        <div class="header-left">
+            <a href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none">
+                <img src="/images/logo.png" alt="CodeNeura" style="width:32px;height:32px;border-radius:8px;object-fit:cover;box-shadow:0 0 14px rgba(200,80,255,0.45)">
+                <span class="brand-title">CodeNeura</span>
+            </a>
+            <span class="header-badge">AI</span>
+        </div>
+
+        <div class="header-center">
+            <button class="search-trigger" id="search-trigger">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <span>Search files…</span>
+                <kbd>⌘K</kbd>
+            </button>
+        </div>
+
+        <div class="header-right">
+            <div class="project-badge hidden" id="project-loaded-badge">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span id="project-name-badge">Project loaded</span>
+            </div>
+
+            <a href="/" class="nav-link">Home</a>
+            <a href="#about-section" class="nav-link">About</a>
+
+            <label class="import-btn" id="import-folder-btn-wrapper" title="Import project folder">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Import Project
+                <input type="file" id="folder-upload-input" class="input-hidden" webkitdirectory multiple>
+            </label>
+
+            <button class="icon-btn" id="theme-toggle-btn" title="Toggle theme">
+                <svg id="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg id="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- ============================================================
+         MAIN LAYOUT
+    ============================================================ -->
+    <main id="container">
+
+        <!-- LEFT: Explorer Panel -->
+        <div class="panel" id="left-panel">
+            <div class="panel-toolbar">
+                <span class="panel-label">Explorer</span>
+                <div class="toolbar-actions">
+                    <label class="import-btn" title="Import project folder" style="font-size:11px;padding:4px 8px">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        Import
+                        <input type="file" class="input-hidden" id="folder-upload-input-panel" webkitdirectory multiple style="display:none">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Project Stats -->
+            <div class="project-stats hidden" id="project-stats">
+                <div class="stat-chip"><span id="stat-files">0</span> files</div>
+                <div class="stat-chip">~<span id="stat-lines">0</span> lines</div>
+                <div class="stat-chip" id="stat-langs"></div>
+            </div>
+
+            <!-- Language Bar -->
+            <div class="lang-bar-container hidden" id="lang-bar-container">
+                <div class="lang-bar" id="lang-bar"></div>
+                <div class="lang-legend" id="lang-legend"></div>
+            </div>
+
+            <!-- Explorer Empty State -->
+            <div class="explorer-empty" id="explorer-empty">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                <p>No project imported</p>
+                <span>Click "Import Project" above to get started</span>
+            </div>
+
+            <!-- File Tree -->
+            <div class="file-tree hidden" id="file-tree"></div>
+        </div>
+
+        <!-- RIGHT: Code + Flowchart + Analysis -->
+        <div id="right-wrapper">
+
+            <div id="code-and-flowchart-panels">
+
+                <!-- Code Panel -->
+                <div class="panel" id="code-panel">
+                    <div class="panel-toolbar">
+                        <div class="panel-file-info">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                            <span class="panel-label" id="code-file-name">Source</span>
+                        </div>
+                        <div class="toolbar-actions" id="code-toolbar-actions" style="display:none">
+                            <button class="icon-btn" id="copy-code-btn" title="Copy code">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="panel-empty" id="code-empty">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                        <span>Select a file to view its source code</span>
+                    </div>
+                    <div class="code-content hidden" id="code-content"></div>
+                </div>
+
+                <!-- Flowchart Panel -->
+                <div class="panel" id="flowchart-panel">
+                    <div class="panel-toolbar">
+                        <div class="panel-file-info">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                            <span class="panel-label" id="flowchart-file-name">Flowchart</span>
+                        </div>
+                        <div class="toolbar-actions" id="flowchart-toolbar-actions" style="display:none">
+                            <button class="icon-btn" id="export-svg-btn" title="Export as SVG">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="panel-empty" id="flowchart-empty">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                        <span>Flowchart will appear here after selecting a file</span>
+                    </div>
+                    <div class="mermaid-scroll-container hidden" id="flowchart-diagram"></div>
+                </div>
+
+            </div>
+
+            <!-- Analysis Panel -->
+            <div class="panel" id="analysis-panel">
+                <div class="panel-toolbar">
+                    <span class="panel-label">Analysis</span>
+                    <div class="tab-group hidden" id="analysis-tabs">
+                        <button class="tab-btn active" data-tab="metrics">Metrics</button>
+                        <button class="tab-btn" data-tab="insights">AI Insights</button>
+                        <button class="tab-btn" data-tab="deps">Dependencies</button>
+                    </div>
+                </div>
+                <div class="panel-empty" id="analysis-empty">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    <span>Select a file to see analysis</span>
+                </div>
+                <div class="analysis-tabs-content hidden" id="analysis-content">
+                    <div class="tab-pane active" id="tab-metrics"></div>
+                    <div class="tab-pane" id="tab-insights"></div>
+                    <div class="tab-pane" id="tab-deps"></div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ============================================================
+         ABOUT SECTION
+    ============================================================ -->
+    <section class="about-section" id="about-section">
+        <div class="about-inner">
+            <h2>About CodeNeura</h2>
+            <p class="about-lead">CodeNeura is a professional-grade AI code visualization tool. Import any project folder to explore its structure, view source files with syntax highlighting, generate instant flowcharts, and get deep code metrics — all powered by Gemini AI.</p>
+
+            <h3>Features</h3>
+            <ul class="feature-grid">
+                <li><span class="feat-icon">🌳</span><div><strong>VS Code-style File Explorer</strong><br>Color-coded file types, collapsible folders, file count badges, and project stats.</div></li>
+                <li><span class="feat-icon">✨</span><div><strong>Syntax Highlighting</strong><br>Full Prism.js support for 24+ languages with one-click copy to clipboard.</div></li>
+                <li><span class="feat-icon">📊</span><div><strong>Instant Flowcharts</strong><br>Client-side Mermaid.js diagrams generated in milliseconds — zero API calls.</div></li>
+                <li><span class="feat-icon">📈</span><div><strong>Real Code Metrics</strong><br>LOC breakdown, cyclomatic complexity, quality grade (A–F), functions & classes.</div></li>
+                <li><span class="feat-icon">🤖</span><div><strong>Gemini AI Insights</strong><br>On-demand analysis: summary, design patterns, and actionable improvement suggestions.</div></li>
+                <li><span class="feat-icon">⌨️</span><div><strong>Keyboard-First UX</strong><br><kbd>⌘K</kbd> search, resizable panels, SVG export — built for developers.</div></li>
+            </ul>
+
+            <h3>Built by</h3>
+            <div class="dev-card">
+                <div class="dev-avatar">HB</div>
+                <div>
+                    <strong>Himanshu Bokde</strong>
+                    <div class="dev-links">
+                        <a href="https://github.com" target="_blank">GitHub</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="about-footer">
+                <span>&copy; 2025 CodeNeura</span>
+                <a href="#" class="back-to-top">Back to top ↑</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SEARCH MODAL
+    ============================================================ -->
+    <div class="modal hidden" id="search-modal">
+        <div class="modal-backdrop" id="search-backdrop"></div>
+        <div class="modal-box">
+            <div class="search-header">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="search-input" placeholder="Search files by name or path…" autocomplete="off" spellcheck="false">
+                <kbd>Esc</kbd>
+            </div>
+            <div class="search-results" id="search-results"></div>
+            <div class="search-footer">
+                <span><kbd>↑↓</kbd> Navigate</span>
+                <span><kbd>↵</kbd> Open</span>
+                <span><kbd>Esc</kbd> Close</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         TOAST CONTAINER
+    ============================================================ -->
+    <div id="toast-container"></div>
+
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-rust.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/split.js@1.6.5/dist/split.min.js"></script>
+
+    <script>
+        mermaid.initialize({ startOnLoad: false, theme: 'dark', flowchart: { curve: 'basis', useMaxWidth: true }, securityLevel: 'loose' });
+    </script>
+
+    <script src="flowchart-parser.js"></script>
+    <script src="script.js"></script>
+
+    <script>
+        // Sync the panel import input with the header import input
+        const panelInput = document.getElementById('folder-upload-input-panel');
+        const headerInput = document.getElementById('folder-upload-input');
+        if (panelInput && headerInput) {
+            panelInput.addEventListener('change', (e) => {
+                const dt = new DataTransfer();
+                [...e.target.files].forEach(f => dt.items.add(f));
+                headerInput.files = dt.files;
+                headerInput.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+        }
+
+        // Scroll to about section if hash matches
+        if (window.location.hash === '#about-section') {
+            setTimeout(() => document.getElementById('about-section')?.scrollIntoView({ behavior: 'smooth' }), 100);
+        }
+    </script>
+</body>
+</html>
