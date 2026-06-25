@@ -1,7 +1,6 @@
-// FILE: ai-code-visualizer/src/controllers/FileController.ts
-
 import { Request, Response } from 'express';
 import fs from 'fs';
+import fsp from 'fs/promises';
 import path from 'path';
 import { GeminiService } from '../services/geminiService';
 
@@ -12,42 +11,44 @@ export class FileController {
     private geminiService: GeminiService | null = null;
 
     private getGeminiService(): GeminiService {
-        if (!this.geminiService) {
-            this.geminiService = new GeminiService();
-        }
+        if (!this.geminiService) this.geminiService = new GeminiService();
         return this.geminiService;
     }
 
-    public handleUpload = (req: Request, res: Response): void => {
+    public handleUpload = (_req: Request, res: Response): void => {
         res.status(200).json({ message: 'Project uploaded successfully.' });
     }
 
+    // ── File structure / architectural analysis ──────────────────────────────
     public getFileStructure = async (req: Request, res: Response): Promise<void> => {
         try {
-            if (!fs.existsSync(uploadsPath) || fs.readdirSync(uploadsPath).length === 0) {
+            if (!fs.existsSync(uploadsPath) || (await fsp.readdir(uploadsPath)).length === 0) {
                 res.json({ summary: 'Please import a project folder to begin analysis.', mermaidDiagram: '' });
                 return;
             }
 
-            let projectContext = "Analyze the following project file structure and generate a high-level architectural diagram.\n\nFILE STRUCTURE:\n";
+            // Async parallel directory walk
             const filePaths: string[] = [];
 
-            const walkDir = (dir: string) => {
-                const files = fs.readdirSync(dir);
-                files.forEach(file => {
-                    const fullPath = path.join(dir, file);
-                    const relativePath = path.relative(uploadsPath, fullPath);
-                    if (fs.statSync(fullPath).isDirectory()) {
-                        filePaths.push(`- ${relativePath}/ (directory)`);
-                        walkDir(fullPath);
+            const walkDir = async (dir: string): Promise<void> => {
+                const entries = await fsp.readdir(dir, { withFileTypes: true });
+                await Promise.all(entries.map(async (entry) => {
+                    const fullPath = path.join(dir, entry.name);
+                    const rel      = path.relative(uploadsPath, fullPath);
+                    if (entry.isDirectory()) {
+                        filePaths.push(`- ${rel}/ (directory)`);
+                        await walkDir(fullPath);
                     } else {
-                        filePaths.push(`- ${relativePath}`);
+                        filePaths.push(`- ${rel}`);
                     }
-                });
+                }));
             };
 
-            walkDir(uploadsPath);
-            projectContext += filePaths.join('\n');
+            await walkDir(uploadsPath);
+
+            const projectContext =
+                "Analyze the following project file structure and generate a high-level architectural diagram.\n\nFILE STRUCTURE:\n" +
+                filePaths.join('\n');
 
             const analysis = await this.getGeminiService().getArchitecturalAnalysis(projectContext);
             res.json(analysis);
@@ -58,6 +59,7 @@ export class FileController {
         }
     }
 
+    // ── AI code analysis ─────────────────────────────────────────────────────
     public aiAnalyze = async (req: Request, res: Response): Promise<void> => {
         const { code, filename } = req.body;
         if (!code || !filename) {
@@ -73,6 +75,7 @@ export class FileController {
         }
     }
 
+    // ── Flowchart generation ──────────────────────────────────────────────────
     public generateFlowchart = async (req: Request, res: Response): Promise<void> => {
         const { code, filename } = req.body;
         if (!code || !filename) {
@@ -88,7 +91,8 @@ export class FileController {
         }
     }
 
-    public getFileContent = (req: Request, res: Response): void => {
+    // ── File content serving ──────────────────────────────────────────────────
+    public getFileContent = async (req: Request, res: Response): Promise<void> => {
         const { filePath } = req.query;
 
         if (typeof filePath !== 'string') {
@@ -96,16 +100,16 @@ export class FileController {
             return;
         }
 
+        const fullPath = path.join(uploadsPath, filePath);
+        if (!fullPath.startsWith(uploadsPath)) {
+            res.status(403).json({ error: 'Forbidden' });
+            return;
+        }
+
         try {
-            const fullPath = path.join(uploadsPath, filePath);
-            if (!fullPath.startsWith(uploadsPath)) {
-                res.status(403).json({ error: 'Forbidden' });
-                return;
-            }
-            const content = fs.readFileSync(fullPath, 'utf-8');
+            const content = await fsp.readFile(fullPath, 'utf-8');
             res.type('text/plain').send(content);
-        } catch (error) {
-            console.error("Failed to read file:", error);
+        } catch {
             res.status(404).json({ error: 'File not found.' });
         }
     }
