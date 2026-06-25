@@ -1,7 +1,7 @@
 {
-  "name": "backend",
+  "name": "codeneura",
   "version": "1.0.0",
-  "description": "Backend for AI Code Visualizer",
+  "description": "CodeNeura — AI Code Visualizer",
   "main": "dist/app.js",
   "scripts": {
     "start": "node dist/app.js",
@@ -13,20 +13,18 @@
   "license": "ISC",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
-    "@types/multer": "^2.1.0",
-    "concurrently": "^9.2.1",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.1",
-    "express": "^4.22.1",
-    "multer": "^2.1.1"
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^4.21.2",
+    "multer": "^2.0.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
-    "@types/express": "^4.17.25",
-    "@types/minimatch": "^6.0.0",
-    "@types/node": "^20.19.39",
-    "nodemon": "^3.1.14",
+    "@types/express": "^4.17.23",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^20.19.11",
+    "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.2"
   }
 }
