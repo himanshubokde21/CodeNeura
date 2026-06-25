@@ -1,4 +1,4 @@
-
+// ai-code-visualizer/backend/src/app.ts
 import dotenv from 'dotenv';
 dotenv.config();
 import express from 'express';
@@ -10,21 +10,22 @@ const app = express();
 const PORT = parseInt(process.env.PORT || '5000', 10);
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 
 // --- API routes will remain at /api ---
 app.use('/api', apiRoutes);
 
-// --- Serve static files from the 'public' folder ---
+// --- Serve your static UI from the 'public' folder ---
+// This is the new block that serves your preferred UI
 const publicPath = path.join(__dirname, '..', 'public');
 app.use(express.static(publicPath));
 
-// --- Page routes ---
+// /app → main app page
 app.get('/app', (req, res) => {
   res.sendFile(path.join(publicPath, 'app.html'));
 });
 
-// Landing page for everything else
+// Everything else → landing page
 app.get('*', (req, res) => {
   res.sendFile(path.join(publicPath, 'index.html'));
 });
